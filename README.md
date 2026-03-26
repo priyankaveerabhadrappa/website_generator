@@ -26,21 +26,51 @@ All wrapped in a dark-themed, scroll-animated UI built with Framer Motion.
 
 ## Architecture
 
-```
-Dashboard (/dashboard)
-    |
-    v
-POST /api/generate { jobDescription }
-    |
-    v
-Claude Sonnet 4.6 (AWS Bedrock)
-  + candidate CV + prompt template
-    |
-    v
-SiteConfig JSON --> Vercel Blob storage
-    |
-    v
-/[slug] renders the personalized site
+```mermaid
+flowchart TB
+    subgraph User Flow
+        A["/dashboard"] -->|Paste job description| B["POST /api/generate"]
+    end
+
+    subgraph Generation Pipeline
+        B --> C["Load candidate_cv.md"]
+        B --> D["Load prompt template"]
+        C & D --> E["Build prompt\n(JD + CV + template)"]
+        E -->|API call| F["Claude Sonnet 4.6\n(AWS Bedrock)"]
+        F -->|SiteConfig JSON| G{Validate & parse}
+    end
+
+    subgraph Storage
+        G -->|Store| H[("Vercel Blob\n(production)")]
+        G -.->|Fallback| I[("Filesystem\ndata/sites/*.json")]
+    end
+
+    subgraph Serving
+        J["Visitor hits /company-name"] --> K["[slug]/page.tsx\n(Server Component)"]
+        K -->|Fetch config| H
+        K -.->|Fetch config| I
+        K --> L["SiteRenderer\n(Client Component)"]
+        L --> M["Navigation"]
+        L --> N["HeroSection + ScoreRing"]
+        L --> O["ReviewSection"]
+        L --> P["ExperienceSection"]
+        L --> Q["SkillsSection"]
+        L --> R["WhyCompanySection"]
+        L --> S["EducationSection"]
+        L --> T["BuiltWithSection"]
+        L --> U["ContactSection"]
+    end
+
+    subgraph Management
+        V["GET /api/sites"] -->|List all| H
+        W["DELETE /api/sites/slug"] -->|Remove| H
+    end
+
+    B -->|Return slug + URL| A
+
+    style F fill:#6366f1,color:#fff
+    style H fill:#10b981,color:#fff
+    style L fill:#818cf8,color:#fff
 ```
 
 **Stack:** Next.js 16, TypeScript, React 19, Tailwind CSS 4, Framer Motion, AWS Bedrock (Claude Sonnet), Vercel Blob
