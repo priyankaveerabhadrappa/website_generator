@@ -1,36 +1,129 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Application Generator
 
-## Getting Started
+Generate personalized, animated job application websites from any job description. Instead of sending a PDF resume, send a live URL.
 
-First, run the development server:
+**Paste a job description. Get a website.**
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## How It Works
+
+1. Open the dashboard (`/dashboard`)
+2. Paste a job description into the textarea
+3. Click **Generate Application**
+4. Wait ~15-30 seconds while Claude analyzes the job and your CV
+5. Get a live URL (e.g., `/caidera`) to a fully personalized application site
+
+Each generated site includes:
+
+- **AI Candidate Review** -- job requirements matched against real CV evidence with scores
+- **Experience Timeline** -- work history with highlights tailored to the specific role
+- **Skills & Technologies** -- proficiency bars with job-relevant tags highlighted
+- **Why This Company** -- 5-6 specific, non-generic motivation reasons
+- **Education & Research** -- academic background and thesis details
+- **How This Was Built** -- meta section showcasing the AI-assisted development workflow
+- **Contact** -- email, LinkedIn, phone, languages, relocation info
+
+All wrapped in a dark-themed, scroll-animated UI built with Framer Motion.
+
+## Architecture
+
+```
+Dashboard (/dashboard)
+    |
+    v
+POST /api/generate { jobDescription }
+    |
+    v
+Claude Sonnet 4.6 (AWS Bedrock)
+  + candidate CV + prompt template
+    |
+    v
+SiteConfig JSON --> Vercel Blob storage
+    |
+    v
+/[slug] renders the personalized site
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+**Stack:** Next.js 16, TypeScript, React 19, Tailwind CSS 4, Framer Motion, AWS Bedrock (Claude Sonnet), Vercel Blob
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Project Structure
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+src/
+  app/
+    page.tsx                  # Redirects to /dashboard
+    dashboard/page.tsx        # Dashboard UI
+    [slug]/page.tsx           # Dynamic route -- renders generated sites
+    api/
+      generate/route.ts       # POST -- calls LLM, stores config
+      sites/route.ts          # GET -- lists all generated sites
+      sites/[slug]/route.ts   # GET/DELETE -- single site operations
+  components/
+    dashboard/                # Dashboard UI components
+    site/                     # Application site components (props-driven)
+  lib/
+    types.ts                  # SiteConfig interface
+    llm.ts                    # AWS Bedrock integration
+    prompt.ts                 # LLM prompt template
+    storage.ts                # Vercel Blob + filesystem fallback
+    candidate-cv.ts           # Loads candidate CV
+data/
+  candidate_cv.md             # Your full CV (edit this)
+  sites/                      # Local dev storage (filesystem fallback)
+```
 
-## Learn More
+## Setup
 
-To learn more about Next.js, take a look at the following resources:
+### Prerequisites
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- Node.js 18+
+- AWS account with Bedrock access (Claude Sonnet enabled in `eu-central-1`)
+- Vercel account with a Blob store (for production)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Local Development
 
-## Deploy on Vercel
+```bash
+# Install dependencies
+npm install
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+# Create .env.local with your credentials
+cp .env.example .env.local
+# Edit .env.local with your AWS keys and optionally your Blob token
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+# Start dev server
+npm run dev
+```
+
+Open [http://localhost:3000/dashboard](http://localhost:3000/dashboard).
+
+Without `BLOB_READ_WRITE_TOKEN`, configs are saved to `data/sites/*.json` (filesystem fallback). With the token set, configs go to Vercel Blob and persist across restarts.
+
+### Environment Variables
+
+| Variable | Required | Description |
+|---|---|---|
+| `AWS_ACCESS_KEY_ID` | Yes | AWS access key with Bedrock permissions |
+| `AWS_SECRET_ACCESS_KEY` | Yes | AWS secret key |
+| `AWS_REGION` | Yes | AWS region (e.g., `eu-central-1`) |
+| `BLOB_READ_WRITE_TOKEN` | Production | Vercel Blob token (auto-provided when you link a Blob store) |
+
+### Deploy to Vercel
+
+1. Push this repo to GitHub
+2. Import the repo on [vercel.com](https://vercel.com)
+3. Add the four environment variables above in project settings
+4. Link a Blob store: **Project Settings > Storage > Create Blob Store**
+5. Deploy
+
+Your dashboard will be at `your-app.vercel.app/dashboard`. Every generated site gets a URL like `your-app.vercel.app/company-name`.
+
+## Customizing for Your Own CV
+
+1. Edit `data/candidate_cv.md` with your full work history, education, and skills
+2. Update the contact details in `src/lib/prompt.ts` (education, contact, and builtWith sections in the prompt template)
+3. Redeploy
+
+The LLM uses your CV as the source of truth -- it will never fabricate experiences or skills not present in the file.
+
+## Built With
+
+This entire project -- from architecture to implementation -- was built using [Claude Code](https://claude.ai/claude-code) as an AI pair programmer.

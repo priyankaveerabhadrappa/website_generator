@@ -24,6 +24,9 @@
 .DS_Store
 *.pem
 
+# generated site configs (local dev)
+/data/sites/*.json
+
 # debug
 npm-debug.log*
 yarn-debug.log*
