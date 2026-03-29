@@ -143,15 +143,13 @@ export default function DashboardPage() {
               rel="noopener noreferrer"
               className="text-accent-light hover:underline font-mono text-sm"
             >
-              {typeof window !== "undefined"
-                ? `${window.location.origin}/${successSlug}`
-                : `/${successSlug}`}
+              {`https://priyanka-veerabhadra.com/${successSlug}`}
             </a>
             <div className="mt-3">
               <button
                 onClick={() => {
                   navigator.clipboard.writeText(
-                    `${window.location.origin}/${successSlug}`
+                    `https://priyanka-veerabhadra.com/${successSlug}`
                   );
                 }}
                 className="text-xs text-muted hover:text-foreground transition-colors"

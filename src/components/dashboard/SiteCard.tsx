@@ -45,7 +45,7 @@ export default function SiteCard({ site, onDelete }: SiteCardProps) {
         </a>
         <button
           onClick={() => {
-            navigator.clipboard.writeText(`${window.location.origin}/${site.slug}`);
+            navigator.clipboard.writeText(`https://priyanka-veerabhadra.com/${site.slug}`);
           }}
           className="px-4 py-2 border border-border text-muted text-sm rounded-lg hover:border-accent/50 hover:text-foreground transition-colors"
           title="Copy URL"
