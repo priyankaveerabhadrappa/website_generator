@@ -46,7 +46,7 @@ export default function ScoreRing({ score, label, size = 140 }: ScoreRingProps) 
             transition={{ delay: 1 }}
             className="text-3xl font-bold text-foreground"
           >
-            {score}%
+            {score}
           </motion.span>
         </div>
       </div>

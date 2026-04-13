@@ -28,7 +28,7 @@ export default function SiteCard({ site, onDelete }: SiteCardProps) {
               : "border-accent-light text-accent-light"
           }`}
         >
-          {site.matchScore}%
+          {site.matchScore}
         </div>
       </div>
 

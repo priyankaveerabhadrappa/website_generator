@@ -2,7 +2,6 @@
 
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
-import ScoreRing from "./ScoreRing";
 import { SiteConfig } from "@/lib/types";
 
 interface HeroSectionProps {
@@ -83,38 +82,35 @@ export default function HeroSection({ candidate, hero }: HeroSectionProps) {
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease: "easeOut" }}
-            className="mt-12 flex flex-col md:flex-row items-center gap-10"
+            className="mt-12 text-center md:text-left"
           >
-            <ScoreRing score={candidate.matchScore} label="Candidate Match" />
-            <div className="flex-1 text-center md:text-left">
-              <h1 className="text-4xl md:text-5xl font-bold tracking-tight leading-tight">
-                <span className="text-foreground">{candidate.firstName}</span>
-                <br />
-                <span className="text-accent-light">{candidate.lastName}</span>
-              </h1>
-              <p className="mt-4 text-lg text-muted max-w-lg">
-                {candidate.subtitle}
-                <br />
-                Applying for{" "}
-                <span className="text-foreground font-medium">
-                  {candidate.position}
-                </span>{" "}
-                at {candidate.company}.
-              </p>
-              <div className="mt-6 flex flex-wrap gap-3 justify-center md:justify-start">
-                <a
-                  href="#review"
-                  className="px-6 py-2.5 bg-accent text-white text-sm font-medium rounded-lg hover:bg-accent-light transition-colors glow-accent"
-                >
-                  View Full Review
-                </a>
-                <a
-                  href="#contact"
-                  className="px-6 py-2.5 border border-border text-foreground text-sm font-medium rounded-lg hover:border-accent/50 hover:bg-accent/5 transition-colors"
-                >
-                  Get in Touch
-                </a>
-              </div>
+            <h1 className="text-4xl md:text-5xl font-bold tracking-tight leading-tight">
+              <span className="text-foreground">{candidate.firstName}</span>
+              <br />
+              <span className="text-accent-light">{candidate.lastName}</span>
+            </h1>
+            <p className="mt-4 text-lg text-muted max-w-lg md:max-w-2xl">
+              {candidate.subtitle}
+              <br />
+              Applying for{" "}
+              <span className="text-foreground font-medium">
+                {candidate.position}
+              </span>{" "}
+              at {candidate.company}.
+            </p>
+            <div className="mt-6 flex flex-wrap gap-3 justify-center md:justify-start">
+              <a
+                href="#review"
+                className="px-6 py-2.5 bg-accent text-white text-sm font-medium rounded-lg hover:bg-accent-light transition-colors glow-accent"
+              >
+                View Full Review
+              </a>
+              <a
+                href="#contact"
+                className="px-6 py-2.5 border border-border text-foreground text-sm font-medium rounded-lg hover:border-accent/50 hover:bg-accent/5 transition-colors"
+              >
+                Get in Touch
+              </a>
             </div>
           </motion.div>
         )}

@@ -9,7 +9,7 @@ interface SkillsSectionProps {
   company: string;
 }
 
-function SkillBar({
+function SkillTag({
   skill,
   index,
   inView,
@@ -19,27 +19,33 @@ function SkillBar({
   inView: boolean;
 }) {
   return (
-    <div>
-      <div className="flex items-center justify-between mb-1">
-        <span className="text-sm text-foreground flex items-center gap-2">
-          {skill.name}
-          {skill.jobRelevant && (
-            <span className="text-[10px] px-1.5 py-0.5 bg-success/10 text-success rounded-full border border-success/20 font-mono">
-              JOB-RELEVANT
-            </span>
-          )}
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.4, delay: index * 0.04 }}
+      className={`flex items-baseline gap-1.5 text-sm py-2 border-b border-border/50 last:border-0 ${
+        skill.jobRelevant ? "group" : ""
+      }`}
+    >
+      <span
+        className={`font-medium shrink-0 ${
+          skill.jobRelevant ? "text-success" : "text-foreground"
+        }`}
+      >
+        {skill.name}
+      </span>
+      {skill.evidence && (
+        <>
+          <span className="text-border shrink-0">→</span>
+          <span className="text-muted text-xs leading-snug">{skill.evidence}</span>
+        </>
+      )}
+      {skill.jobRelevant && (
+        <span className="ml-auto shrink-0 text-[10px] px-1.5 py-0.5 bg-success/10 text-success rounded-full border border-success/20 font-mono">
+          JOB-RELEVANT
         </span>
-        <span className="text-xs text-muted font-mono">{skill.level}%</span>
-      </div>
-      <div className="h-1.5 bg-surface rounded-full overflow-hidden">
-        <motion.div
-          initial={{ width: 0 }}
-          animate={inView ? { width: `${skill.level}%` } : {}}
-          transition={{ duration: 0.8, delay: index * 0.05, ease: "easeOut" }}
-          className={`h-full rounded-full ${skill.jobRelevant ? "bg-success" : "bg-accent"}`}
-        />
-      </div>
-    </div>
+      )}
+    </motion.div>
   );
 }
 
@@ -63,7 +69,7 @@ export default function SkillsSection({ skills, company }: SkillsSectionProps) {
             Skills & Technologies
           </h2>
           <p className="text-muted mt-3">
-            Green tags = directly relevant to what {company} is building.
+            Green = directly relevant to what {company} is building.
           </p>
         </motion.div>
         <div className="grid md:grid-cols-2 gap-8">
@@ -75,15 +81,15 @@ export default function SkillsSection({ skills, company }: SkillsSectionProps) {
               transition={{ duration: 0.5 }}
               className="bg-surface border border-border rounded-xl p-6"
             >
-              <div className="flex items-center gap-3 mb-6">
+              <div className="flex items-center gap-3 mb-5">
                 <span className="w-10 h-10 bg-accent/10 border border-accent/20 rounded-lg flex items-center justify-center text-accent-light font-mono text-sm font-bold">
                   {category.icon}
                 </span>
                 <h3 className="text-foreground font-semibold text-lg">{category.name}</h3>
               </div>
-              <div className="space-y-4">
+              <div>
                 {category.skills.map((skill, i) => (
-                  <SkillBar key={skill.name} skill={skill} index={i} inView={isInView} />
+                  <SkillTag key={skill.name} skill={skill} index={i} inView={isInView} />
                 ))}
               </div>
             </motion.div>

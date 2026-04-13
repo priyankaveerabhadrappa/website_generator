@@ -45,7 +45,7 @@ export interface SiteConfig {
       icon: string;
       skills: {
         name: string;
-        level: number;
+        evidence: string;
         jobRelevant: boolean;
       }[];
     }[];
