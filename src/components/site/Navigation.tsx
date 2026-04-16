@@ -13,7 +13,6 @@ const navItems = [
   { label: "Experience", href: "#experience" },
   { label: "Skills", href: "#skills" },
   { label: "Why Us", href: "#why-company" },
-  { label: "Built With", href: "#built-with" },
   { label: "Contact", href: "#contact" },
 ];
 

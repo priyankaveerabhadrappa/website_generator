@@ -8,7 +8,6 @@ import ExperienceSection from "./ExperienceSection";
 import SkillsSection from "./SkillsSection";
 import WhyCompanySection from "./WhyCompanySection";
 import EducationSection from "./EducationSection";
-import BuiltWithSection from "./BuiltWithSection";
 import ContactSection from "./ContactSection";
 
 interface SiteRendererProps {
@@ -27,7 +26,6 @@ export default function SiteRenderer({ config }: SiteRendererProps) {
       <SkillsSection skills={config.skills} company={candidate.company} />
       <WhyCompanySection whyCompany={config.whyCompany} company={candidate.company} />
       <EducationSection education={config.education} />
-      <BuiltWithSection builtWith={config.builtWith} />
       <ContactSection contact={config.contact} company={candidate.company} />
     </main>
   );

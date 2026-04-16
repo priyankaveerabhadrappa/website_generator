@@ -34,12 +34,6 @@ function SkillTag({
       >
         {skill.name}
       </span>
-      {skill.evidence && (
-        <>
-          <span className="text-border shrink-0">→</span>
-          <span className="text-muted text-xs leading-snug">{skill.evidence}</span>
-        </>
-      )}
       {skill.jobRelevant && (
         <span className="ml-auto shrink-0 text-[10px] px-1.5 py-0.5 bg-success/10 text-success rounded-full border border-success/20 font-mono">
           JOB-RELEVANT
