@@ -63,7 +63,7 @@ function ReasonCard({
       <div className="w-10 h-10 bg-accent/10 border border-accent/20 rounded-lg flex items-center justify-center text-accent-light mb-4">
         {iconMap[reason.iconType] || iconMap.code}
       </div>
-      <h3 className="text-foreground font-semibold mb-3">{reason.title}</h3>
+      <h3 className="text-foreground font-semibold mb-3">{reason.title.replace(/\s*[—–-]\s*/g, " ").trim()}</h3>
       <p className="text-sm text-muted leading-relaxed">{reason.body}</p>
     </motion.div>
   );

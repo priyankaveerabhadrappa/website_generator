@@ -69,7 +69,7 @@ export default function ContactSection({ contact, company }: ContactSectionProps
           transition={{ delay: 0.5 }}
           className="mt-20 pt-8 border-t border-border"
         >
-          <p className="text-xs text-muted font-mono">{contact.footerText}</p>
+          <p className="text-xs text-muted font-mono">© Priyanka Veerabhadrappa</p>
         </motion.div>
       </div>
     </section>
