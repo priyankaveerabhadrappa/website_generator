@@ -24,8 +24,8 @@
 .DS_Store
 *.pem
 
-# generated site configs (local dev)
-/data/sites/*.json
+# generated site configs are committed on purpose -- they are the source for
+# the prerendered application pages
 
 # debug
 npm-debug.log*
@@ -35,6 +35,7 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
 
 # vercel
 .vercel

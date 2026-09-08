@@ -1,10 +1,17 @@
 import { notFound } from "next/navigation";
-import { getSiteConfig } from "@/lib/storage";
+import { getSiteConfig, listSiteSlugs } from "@/lib/storage";
 import SiteRenderer from "@/components/site/SiteRenderer";
 import type { Metadata } from "next";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
+}
+
+// Committed configs are prerendered below. Anything else falls through to an
+// on-demand render so a freshly generated site is viewable without a rebuild.
+export async function generateStaticParams() {
+  const slugs = await listSiteSlugs();
+  return slugs.map((slug) => ({ slug }));
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {

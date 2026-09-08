@@ -135,7 +135,7 @@ export default function DashboardPage() {
         {successSlug && (
           <div className="bg-success/10 border border-success/30 rounded-xl p-6 mb-8 text-center">
             <p className="text-success font-semibold mb-2">
-              Application site is live!
+              Application site generated!
             </p>
             <a
               href={`/${successSlug}`}
@@ -145,6 +145,11 @@ export default function DashboardPage() {
             >
               {`https://priyanka-veerabhadra.com/${successSlug}`}
             </a>
+            <p className="text-muted text-xs mt-3">
+              Preview it locally, then commit{" "}
+              <code className="font-mono">data/sites/{successSlug}.json</code>{" "}
+              and push to publish it at the URL above.
+            </p>
             <div className="mt-3">
               <button
                 onClick={() => {

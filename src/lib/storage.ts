@@ -1,55 +1,57 @@
 import { SiteConfig, SiteConfigSummary } from "./types";
+import {
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  readdirSync,
+  unlinkSync,
+  writeFileSync,
+} from "fs";
+import { join } from "path";
 
-const IS_BLOB = !!process.env.BLOB_READ_WRITE_TOKEN;
+const SITES_DIR = join(process.cwd(), "data", "sites");
 
-function getToken(): string {
-  return process.env.BLOB_READ_WRITE_TOKEN!;
+// Configs are committed to the repo and prerendered at build time, so sites are
+// generated on a local checkout. Deployments have a read-only filesystem.
+const IS_READ_ONLY = !!process.env.VERCEL;
+
+const LOCAL_ONLY_MESSAGE =
+  "Sites can only be generated locally. Run `npm run dev`, generate there, then commit data/sites/ and push to publish.";
+
+function configPath(slug: string): string {
+  return join(SITES_DIR, `${slug}.json`);
 }
 
-// ---------- Vercel Blob (private store) ----------
-async function blobStore(config: SiteConfig): Promise<void> {
-  const { put } = await import("@vercel/blob");
-  await put(`sites/${config.slug}.json`, JSON.stringify(config), {
-    access: "private",
-    contentType: "application/json",
-    addRandomSuffix: false,
-    token: getToken(),
-  });
+// ---------- Public API ----------
+export async function storeSiteConfig(config: SiteConfig): Promise<void> {
+  if (IS_READ_ONLY) throw new Error(LOCAL_ONLY_MESSAGE);
+  mkdirSync(SITES_DIR, { recursive: true });
+  writeFileSync(
+    configPath(config.slug),
+    JSON.stringify(config, null, 2),
+    "utf-8"
+  );
 }
 
-async function blobReadUrl(url: string): Promise<string> {
-  const { get } = await import("@vercel/blob");
-  const resp = await get(url, { token: getToken(), access: "private" });
-  if (!resp) throw new Error(`Blob not found: ${url}`);
-  // Read the stream into a string using Response API
-  const response = new Response(resp.stream);
-  return response.text();
+export async function getSiteConfig(slug: string): Promise<SiteConfig | null> {
+  const filePath = configPath(slug);
+  if (!existsSync(filePath)) return null;
+  return JSON.parse(readFileSync(filePath, "utf-8"));
 }
 
-async function blobGet(slug: string): Promise<SiteConfig | null> {
-  const { list } = await import("@vercel/blob");
-  const result = await list({
-    prefix: `sites/${slug}.json`,
-    token: getToken(),
-  });
-  const blob = result.blobs.find((b) => b.pathname === `sites/${slug}.json`);
-  if (!blob) return null;
-  const text = await blobReadUrl(blob.url);
-  return JSON.parse(text);
+export async function listSiteSlugs(): Promise<string[]> {
+  if (!existsSync(SITES_DIR)) return [];
+  return readdirSync(SITES_DIR)
+    .filter((f) => f.endsWith(".json"))
+    .map((f) => f.slice(0, -".json".length));
 }
 
-async function blobList(): Promise<SiteConfigSummary[]> {
-  const { list } = await import("@vercel/blob");
-  const result = await list({
-    prefix: "sites/",
-    token: getToken(),
-  });
+export async function listSiteConfigs(): Promise<SiteConfigSummary[]> {
   const summaries: SiteConfigSummary[] = [];
-  for (const blob of result.blobs) {
-    if (!blob.pathname.endsWith(".json")) continue;
+  for (const slug of await listSiteSlugs()) {
     try {
-      const text = await blobReadUrl(blob.url);
-      const config: SiteConfig = JSON.parse(text);
+      const config = await getSiteConfig(slug);
+      if (!config) continue;
       summaries.push({
         slug: config.slug,
         company: config.candidate.company,
@@ -58,94 +60,14 @@ async function blobList(): Promise<SiteConfigSummary[]> {
         generatedAt: config.generatedAt,
       });
     } catch {
-      // skip malformed blobs
+      // skip malformed configs
     }
   }
   return summaries;
 }
 
-async function blobDelete(slug: string): Promise<void> {
-  const { del, list } = await import("@vercel/blob");
-  const result = await list({
-    prefix: `sites/${slug}.json`,
-    token: getToken(),
-  });
-  const blob = result.blobs.find((b) => b.pathname === `sites/${slug}.json`);
-  if (blob) await del(blob.url, { token: getToken() });
-}
-
-// ---------- Filesystem (local dev fallback) ----------
-import { existsSync, readFileSync, writeFileSync, unlinkSync, readdirSync } from "fs";
-import { join } from "path";
-
-const SITES_DIR = join(process.cwd(), "data", "sites");
-
-function fsStore(config: SiteConfig): void {
-  writeFileSync(
-    join(SITES_DIR, `${config.slug}.json`),
-    JSON.stringify(config, null, 2),
-    "utf-8"
-  );
-}
-
-function fsGet(slug: string): SiteConfig | null {
-  const filePath = join(SITES_DIR, `${slug}.json`);
-  if (!existsSync(filePath)) return null;
-  return JSON.parse(readFileSync(filePath, "utf-8"));
-}
-
-function fsList(): SiteConfigSummary[] {
-  if (!existsSync(SITES_DIR)) return [];
-  return readdirSync(SITES_DIR)
-    .filter((f) => f.endsWith(".json"))
-    .map((f) => {
-      const config: SiteConfig = JSON.parse(
-        readFileSync(join(SITES_DIR, f), "utf-8")
-      );
-      return {
-        slug: config.slug,
-        company: config.candidate.company,
-        position: config.candidate.position,
-        matchScore: config.candidate.matchScore,
-        generatedAt: config.generatedAt,
-      };
-    });
-}
-
-function fsDelete(slug: string): void {
-  const filePath = join(SITES_DIR, `${slug}.json`);
-  if (existsSync(filePath)) unlinkSync(filePath);
-}
-
-// ---------- Public API ----------
-export async function storeSiteConfig(config: SiteConfig): Promise<void> {
-  if (IS_BLOB) {
-    await blobStore(config);
-  } else {
-    fsStore(config);
-  }
-}
-
-export async function getSiteConfig(
-  slug: string
-): Promise<SiteConfig | null> {
-  if (IS_BLOB) {
-    return blobGet(slug);
-  }
-  return fsGet(slug);
-}
-
-export async function listSiteConfigs(): Promise<SiteConfigSummary[]> {
-  if (IS_BLOB) {
-    return blobList();
-  }
-  return fsList();
-}
-
 export async function deleteSiteConfig(slug: string): Promise<void> {
-  if (IS_BLOB) {
-    await blobDelete(slug);
-  } else {
-    fsDelete(slug);
-  }
+  if (IS_READ_ONLY) throw new Error(LOCAL_ONLY_MESSAGE);
+  const filePath = configPath(slug);
+  if (existsSync(filePath)) unlinkSync(filePath);
 }

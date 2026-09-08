@@ -41,14 +41,13 @@ flowchart TB
     end
 
     subgraph Storage
-        G -->|Store| H[("Vercel Blob\n(production)")]
-        G -.->|Fallback| I[("Filesystem\ndata/sites/*.json")]
+        G -->|Write locally| H[("data/sites/*.json\n(committed to git)")]
     end
 
     subgraph Serving
-        J["Visitor hits /company-name"] --> K["[slug]/page.tsx\n(Server Component)"]
-        K -->|Fetch config| H
-        K -.->|Fetch config| I
+        H -->|git push| I["next build"]
+        I -->|generateStaticParams| K["[slug]/page.tsx\nprerendered as static HTML"]
+        J["Visitor hits /company-name"] --> K
         K --> L["SiteRenderer\n(Client Component)"]
         L --> M["Navigation"]
         L --> N["HeroSection + ScoreRing"]
@@ -73,7 +72,12 @@ flowchart TB
     style L fill:#818cf8,color:#fff
 ```
 
-**Stack:** Next.js 16, TypeScript, React 19, Tailwind CSS 4, Framer Motion, AWS Bedrock (Claude Sonnet), Vercel Blob
+Generated configs are committed to the repo and prerendered into static HTML at build
+time. There is no runtime storage service, so serving the sites costs nothing and stays
+inside any free hosting tier. The tradeoff: generation happens on a local checkout, since
+deployed filesystems are read-only.
+
+**Stack:** Next.js 16, TypeScript, React 19, Tailwind CSS 4, Framer Motion, AWS Bedrock (Claude Sonnet)
 
 ## Project Structure
 
@@ -94,11 +98,11 @@ src/
     types.ts                  # SiteConfig interface
     llm.ts                    # AWS Bedrock integration
     prompt.ts                 # LLM prompt template
-    storage.ts                # Vercel Blob + filesystem fallback
+    storage.ts                # Reads/writes data/sites/*.json
     candidate-cv.ts           # Loads candidate CV
 data/
   candidate_cv.md             # Your full CV (edit this)
-  sites/                      # Local dev storage (filesystem fallback)
+  sites/                      # Generated configs -- commit these to publish
 ```
 
 ## Setup
@@ -107,7 +111,7 @@ data/
 
 - Node.js 18+
 - AWS account with Bedrock access (Claude Sonnet enabled in `eu-central-1`)
-- Vercel account with a Blob store (for production)
+- Any host that runs `next build` (Vercel free tier is enough)
 
 ### Local Development
 
@@ -117,15 +121,13 @@ npm install
 
 # Create .env.local with your credentials
 cp .env.example .env.local
-# Edit .env.local with your AWS keys and optionally your Blob token
+# Edit .env.local with your AWS keys
 
 # Start dev server
 npm run dev
 ```
 
 Open [http://localhost:3000/dashboard](http://localhost:3000/dashboard).
-
-Without `BLOB_READ_WRITE_TOKEN`, configs are saved to `data/sites/*.json` (filesystem fallback). With the token set, configs go to Vercel Blob and persist across restarts.
 
 ### Environment Variables
 
@@ -134,17 +136,29 @@ Without `BLOB_READ_WRITE_TOKEN`, configs are saved to `data/sites/*.json` (files
 | `AWS_ACCESS_KEY_ID` | Yes | AWS access key with Bedrock permissions |
 | `AWS_SECRET_ACCESS_KEY` | Yes | AWS secret key |
 | `AWS_REGION` | Yes | AWS region (e.g., `eu-central-1`) |
-| `BLOB_READ_WRITE_TOKEN` | Production | Vercel Blob token (auto-provided when you link a Blob store) |
+
+### Publishing a Generated Site
+
+Generation is local-only, so publishing is a git push:
+
+```bash
+npm run dev                       # generate at /dashboard
+git add data/sites/<slug>.json
+git commit -m "Add <company> application"
+git push                          # host rebuilds and prerenders the new page
+```
+
+The deployed dashboard is read-only -- it lists existing sites but cannot generate or
+delete them, because deployed filesystems cannot be written to.
 
 ### Deploy to Vercel
 
 1. Push this repo to GitHub
 2. Import the repo on [vercel.com](https://vercel.com)
-3. Add the four environment variables above in project settings
-4. Link a Blob store: **Project Settings > Storage > Create Blob Store**
-5. Deploy
+3. Add the three environment variables above in project settings
+4. Deploy
 
-Your dashboard will be at `your-app.vercel.app/dashboard`. Every generated site gets a URL like `your-app.vercel.app/company-name`.
+Every generated site gets a URL like `your-app.vercel.app/company-name`.
 
 ## Customizing for Your Own CV
 
