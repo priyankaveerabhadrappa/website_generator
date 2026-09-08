@@ -22,7 +22,6 @@ function configPath(slug: string): string {
   return join(SITES_DIR, `${slug}.json`);
 }
 
-// ---------- Public API ----------
 export async function storeSiteConfig(config: SiteConfig): Promise<void> {
   if (IS_READ_ONLY) throw new Error(LOCAL_ONLY_MESSAGE);
   mkdirSync(SITES_DIR, { recursive: true });

@@ -71,12 +71,10 @@ export async function generateSiteConfig(
 
   const config: SiteConfig = JSON.parse(textContent);
 
-  // Ensure slug is valid
   if (!config.slug) {
     config.slug = generateSlug(config.candidate?.company || "application");
   }
 
-  // Add metadata
   config.generatedAt = new Date().toISOString();
 
   return config;

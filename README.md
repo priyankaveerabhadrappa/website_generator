@@ -19,7 +19,6 @@ Each generated site includes:
 - **Skills & Technologies** -- proficiency bars with job-relevant tags highlighted
 - **Why This Company** -- 5-6 specific, non-generic motivation reasons
 - **Education & Research** -- academic background and thesis details
-- **How This Was Built** -- meta section showcasing the AI-assisted development workflow
 - **Contact** -- email, LinkedIn, phone, languages, relocation info
 
 All wrapped in a dark-themed, scroll-animated UI built with Framer Motion.
@@ -50,13 +49,12 @@ flowchart TB
         J["Visitor hits /company-name"] --> K
         K --> L["SiteRenderer\n(Client Component)"]
         L --> M["Navigation"]
-        L --> N["HeroSection + ScoreRing"]
+        L --> N["HeroSection"]
         L --> O["ReviewSection"]
         L --> P["ExperienceSection"]
         L --> Q["SkillsSection"]
         L --> R["WhyCompanySection"]
         L --> S["EducationSection"]
-        L --> T["BuiltWithSection"]
         L --> U["ContactSection"]
     end
 
@@ -109,7 +107,7 @@ data/
 
 ### Prerequisites
 
-- Node.js 18+
+- Node.js 20+
 - AWS account with Bedrock access (Claude Sonnet enabled in `eu-central-1`)
 - Any host that runs `next build` (Vercel free tier is enough)
 
@@ -163,7 +161,7 @@ Every generated site gets a URL like `your-app.vercel.app/company-name`.
 ## Customizing for Your Own CV
 
 1. Edit `data/candidate_cv.md` with your full work history, education, and skills
-2. Update the contact details in `src/lib/prompt.ts` (education, contact, and builtWith sections in the prompt template)
+2. Update the contact details in `src/lib/prompt.ts` (education and contact sections in the prompt template)
 3. Redeploy
 
 The LLM uses your CV as the source of truth -- it will never fabricate experiences or skills not present in the file.

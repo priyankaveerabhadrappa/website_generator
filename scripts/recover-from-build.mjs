@@ -13,7 +13,6 @@ const REQUIRED_KEYS = [
   "skills",
   "whyCompany",
   "education",
-  "builtWith",
   "contact",
 ];
 

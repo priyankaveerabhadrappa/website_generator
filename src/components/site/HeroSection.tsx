@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { SiteConfig } from "@/lib/types";
 
 interface HeroSectionProps {
@@ -10,7 +10,10 @@ interface HeroSectionProps {
 }
 
 export default function HeroSection({ candidate, hero }: HeroSectionProps) {
-  const allLines = [hero.terminalCommand, ...hero.terminalSteps];
+  const allLines = useMemo(
+    () => [hero.terminalCommand, ...hero.terminalSteps],
+    [hero.terminalCommand, hero.terminalSteps]
+  );
   const [displayedLines, setDisplayedLines] = useState<string[]>([]);
   const [currentLine, setCurrentLine] = useState(0);
   const [currentChar, setCurrentChar] = useState(0);

@@ -87,7 +87,6 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-[#0a0a0f] grid-bg">
       <div className="max-w-4xl mx-auto px-6 py-16">
-        {/* Header */}
         <div className="text-center mb-12">
           <h1 className="text-4xl md:text-5xl font-bold text-foreground tracking-tight">
             Application <span className="text-accent-light">Generator</span>
@@ -98,7 +97,6 @@ export default function DashboardPage() {
           </p>
         </div>
 
-        {/* Form */}
         <div className="bg-surface border border-border rounded-xl p-6 mb-8">
           <label className="block text-sm text-foreground font-medium mb-3">
             Job Description
@@ -131,7 +129,6 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Success */}
         {successSlug && (
           <div className="bg-success/10 border border-success/30 rounded-xl p-6 mb-8 text-center">
             <p className="text-success font-semibold mb-2">
@@ -165,14 +162,12 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* Error */}
         {error && (
           <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 mb-8">
             <p className="text-red-400 text-sm">{error}</p>
           </div>
         )}
 
-        {/* Sites list */}
         {sites.length > 0 && (
           <div>
             <h2 className="text-xl font-semibold text-foreground mb-6">

@@ -75,20 +75,6 @@ export interface SiteConfig {
     }[];
   };
 
-  builtWith: {
-    processSteps: {
-      step: string;
-      title: string;
-      description: string;
-    }[];
-    techStack: {
-      name: string;
-      description: string;
-      category: string;
-    }[];
-    aiNoteText: string;
-  };
-
   contact: {
     email: string;
     locationDetail: string;
