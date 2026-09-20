@@ -27,6 +27,11 @@
 # generated site configs are committed on purpose -- they are the source for
 # the prerendered application pages
 
+# agent service: virtualenv and local run state (checkpoints, memory)
+/agent/.venv/
+/agent/.state/
+__pycache__/
+
 # debug
 npm-debug.log*
 yarn-debug.log*
