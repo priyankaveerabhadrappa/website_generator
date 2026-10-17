@@ -1,35 +1,18 @@
 import { SiteConfig, SiteConfigSummary } from "./types";
-import {
-  existsSync,
-  mkdirSync,
-  readFileSync,
-  readdirSync,
-  unlinkSync,
-  writeFileSync,
-} from "fs";
+import { existsSync, readFileSync, readdirSync, unlinkSync } from "fs";
 import { join } from "path";
 
 const SITES_DIR = join(process.cwd(), "data", "sites");
 
-// Configs are committed to the repo and prerendered at build time, so sites are
-// generated on a local checkout. Deployments have a read-only filesystem.
+// Configs are written by the local agent service (agent/), committed to the repo and
+// prerendered at build time. Deployments have a read-only filesystem.
 const IS_READ_ONLY = !!process.env.VERCEL;
 
 const LOCAL_ONLY_MESSAGE =
-  "Sites can only be generated locally. Run `npm run dev`, generate there, then commit data/sites/ and push to publish.";
+  "Sites can only be managed locally. Run `npm run dev`, then commit data/sites/ and push to publish.";
 
 function configPath(slug: string): string {
   return join(SITES_DIR, `${slug}.json`);
-}
-
-export async function storeSiteConfig(config: SiteConfig): Promise<void> {
-  if (IS_READ_ONLY) throw new Error(LOCAL_ONLY_MESSAGE);
-  mkdirSync(SITES_DIR, { recursive: true });
-  writeFileSync(
-    configPath(config.slug),
-    JSON.stringify(config, null, 2),
-    "utf-8"
-  );
 }
 
 export async function getSiteConfig(slug: string): Promise<SiteConfig | null> {

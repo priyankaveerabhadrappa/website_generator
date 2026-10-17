@@ -9,6 +9,19 @@ interface ReviewSectionProps {
   company: string;
 }
 
+function matchColor(match: string): string {
+  if (match === "Partial") return "text-amber-300";
+  if (match === "Gap") return "text-muted";
+  return match.startsWith("Exceptional") ? "text-success" : "text-accent-light";
+}
+
+function matchLabel(match: string): string {
+  if (match === "Strong") return "Strong Match";
+  if (match === "Partial") return "Partial Match";
+  if (match === "Gap") return "Growing Into";
+  return match;
+}
+
 function ReviewCard({
   item,
   index,
@@ -30,11 +43,9 @@ function ReviewCard({
       <div className="mb-3">
         <h3 className="text-foreground font-semibold text-lg mb-1">{item.requirement}</h3>
         <span
-          className={`text-xs font-mono uppercase tracking-wider ${
-            item.score >= 96 ? "text-success" : "text-accent-light"
-          }`}
+          className={`text-xs font-mono uppercase tracking-wider ${matchColor(item.match)}`}
         >
-          {item.match}
+          {matchLabel(item.match)}
         </span>
       </div>
       <p className="text-sm text-muted leading-relaxed">{item.evidence}</p>

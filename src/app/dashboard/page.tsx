@@ -2,76 +2,99 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { SiteConfigSummary } from "@/lib/types";
+import { agentFetch, AgentRun } from "@/lib/agent";
 import SiteCard from "@/components/dashboard/SiteCard";
+import RunPanel from "@/components/dashboard/RunPanel";
+import PreferencesPanel from "@/components/dashboard/PreferencesPanel";
 
-const progressMessages = [
-  "Analyzing job description...",
-  "Extracting requirements...",
-  "Matching candidate profile...",
-  "Generating review scores...",
-  "Crafting motivation section...",
-  "Building application website...",
-  "Almost there...",
-];
+const RUN_KEY = "appgen:activeRun";
+const POLL_MS = 2000;
+
+async function fetchSites(): Promise<SiteConfigSummary[] | null> {
+  try {
+    const res = await fetch("/api/sites");
+    return res.ok ? await res.json() : null;
+  } catch {
+    return null;
+  }
+}
 
 export default function DashboardPage() {
   const [jobDescription, setJobDescription] = useState("");
-  const [generating, setGenerating] = useState(false);
-  const [progressIndex, setProgressIndex] = useState(0);
+  const [companyUrl, setCompanyUrl] = useState("");
+  const [runId, setRunId] = useState<string | null>(() =>
+    typeof window === "undefined" ? null : localStorage.getItem(RUN_KEY)
+  );
+  const [run, setRun] = useState<AgentRun | null>(null);
+  const [pollKey, setPollKey] = useState(0);
   const [error, setError] = useState<string | null>(null);
-  const [successSlug, setSuccessSlug] = useState<string | null>(null);
   const [sites, setSites] = useState<SiteConfigSummary[]>([]);
 
-  const loadSites = useCallback(async () => {
-    try {
-      const res = await fetch("/api/sites");
-      if (res.ok) {
-        const data = await res.json();
-        setSites(data);
-      }
-    } catch {
-      // silent fail on list
-    }
+  const loadSites = useCallback(() => {
+    fetchSites().then((data) => data && setSites(data));
   }, []);
 
-  useEffect(() => {
-    loadSites();
-  }, [loadSites]);
+  useEffect(loadSites, [loadSites]);
 
   useEffect(() => {
-    if (!generating) return;
-    const interval = setInterval(() => {
-      setProgressIndex((i) => (i + 1) % progressMessages.length);
-    }, 3000);
-    return () => clearInterval(interval);
-  }, [generating]);
+    if (!runId) return;
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout>;
+
+    const poll = async () => {
+      try {
+        const data = await agentFetch<AgentRun>(`runs/${runId}`);
+        if (cancelled) return;
+        setRun(data);
+        setError(null);
+        if (data.status === "published") loadSites();
+        if (data.status === "running") timer = setTimeout(poll, POLL_MS);
+      } catch (err) {
+        if (cancelled) return;
+        setError(err instanceof Error ? err.message : "Could not reach the agent service");
+        timer = setTimeout(poll, POLL_MS * 3);
+      }
+    };
+    poll();
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [runId, pollKey, loadSites]);
+
+  const trackRun = (id: string | null) => {
+    if (id) localStorage.setItem(RUN_KEY, id);
+    else localStorage.removeItem(RUN_KEY);
+    setRun(null);
+    setRunId(id);
+  };
 
   const handleGenerate = async () => {
-    setGenerating(true);
     setError(null);
-    setSuccessSlug(null);
-    setProgressIndex(0);
-
     try {
-      const res = await fetch("/api/generate", {
+      const { run_id } = await agentFetch<{ run_id: string }>("runs", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ jobDescription }),
+        body: JSON.stringify({ job_description: jobDescription, company_url: companyUrl || null }),
       });
-
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Generation failed");
-      }
-
-      const data = await res.json();
-      setSuccessSlug(data.slug);
       setJobDescription("");
-      loadSites();
+      setCompanyUrl("");
+      trackRun(run_id);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
-    } finally {
-      setGenerating(false);
+    }
+  };
+
+  const handleDecision = async (action: "approve" | "revise" | "reject", feedback?: string) => {
+    if (!runId) return;
+    try {
+      await agentFetch(`runs/${runId}/review`, {
+        method: "POST",
+        body: JSON.stringify({ action, feedback }),
+      });
+      setRun((prev) => (prev ? { ...prev, status: "running", review: null } : prev));
+      setPollKey((k) => k + 1);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Decision failed");
     }
   };
 
@@ -84,6 +107,8 @@ export default function DashboardPage() {
     }
   };
 
+  const busy = run?.status === "running" || run?.status === "awaiting_review";
+
   return (
     <div className="min-h-screen bg-[#0a0a0f] grid-bg">
       <div className="max-w-4xl mx-auto px-6 py-16">
@@ -92,8 +117,8 @@ export default function DashboardPage() {
             Application <span className="text-accent-light">Generator</span>
           </h1>
           <p className="text-muted mt-3 max-w-lg mx-auto">
-            Paste a job description. Get a live, personalized application website.
-            Powered by Claude + Next.js.
+            Paste a job description. A team of agents researches the company, maps every
+            requirement to CV evidence, writes the site and fact-checks it before you approve.
           </p>
         </div>
 
@@ -105,68 +130,42 @@ export default function DashboardPage() {
             value={jobDescription}
             onChange={(e) => setJobDescription(e.target.value)}
             placeholder="Paste the full job posting here..."
-            disabled={generating}
+            disabled={busy}
             className="w-full h-64 bg-surface-light border border-border rounded-lg px-4 py-3 text-foreground text-sm placeholder:text-muted/50 focus:outline-none focus:border-accent/50 resize-none disabled:opacity-50 transition-colors"
+          />
+          <label className="block text-sm text-foreground font-medium mt-4 mb-2">
+            Company website <span className="text-muted font-normal">(optional, enables research)</span>
+          </label>
+          <input
+            value={companyUrl}
+            onChange={(e) => setCompanyUrl(e.target.value)}
+            placeholder="https://www.example.com"
+            disabled={busy}
+            className="w-full bg-surface-light border border-border rounded-lg px-4 py-2 text-foreground text-sm placeholder:text-muted/50 focus:outline-none focus:border-accent/50 disabled:opacity-50"
           />
 
           <div className="mt-4 flex items-center gap-4">
             <button
               onClick={handleGenerate}
-              disabled={generating || !jobDescription.trim()}
+              disabled={busy || !jobDescription.trim()}
               className="px-8 py-3 bg-accent text-white font-medium rounded-lg hover:bg-accent-light transition-colors disabled:opacity-40 disabled:cursor-not-allowed glow-accent"
             >
-              {generating ? "Generating..." : "Generate Application"}
+              {busy ? "Run in progress" : "Generate Application"}
             </button>
-
-            {generating && (
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 border-2 border-accent border-t-transparent rounded-full animate-spin" />
-                <span className="text-sm text-muted font-mono">
-                  {progressMessages[progressIndex]}
-                </span>
-              </div>
-            )}
           </div>
         </div>
-
-        {successSlug && (
-          <div className="bg-success/10 border border-success/30 rounded-xl p-6 mb-8 text-center">
-            <p className="text-success font-semibold mb-2">
-              Application site generated!
-            </p>
-            <a
-              href={`/${successSlug}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-accent-light hover:underline font-mono text-sm"
-            >
-              {`https://priyanka-veerabhadra.com/${successSlug}`}
-            </a>
-            <p className="text-muted text-xs mt-3">
-              Preview it locally, then commit{" "}
-              <code className="font-mono">data/sites/{successSlug}.json</code>{" "}
-              and push to publish it at the URL above.
-            </p>
-            <div className="mt-3">
-              <button
-                onClick={() => {
-                  navigator.clipboard.writeText(
-                    `https://priyanka-veerabhadra.com/${successSlug}`
-                  );
-                }}
-                className="text-xs text-muted hover:text-foreground transition-colors"
-              >
-                Copy to clipboard
-              </button>
-            </div>
-          </div>
-        )}
 
         {error && (
           <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 mb-8">
             <p className="text-red-400 text-sm">{error}</p>
           </div>
         )}
+
+        {run && (
+          <RunPanel run={run} onDecision={handleDecision} onDismiss={() => trackRun(null)} />
+        )}
+
+        <PreferencesPanel />
 
         {sites.length > 0 && (
           <div>

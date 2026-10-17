@@ -1,5 +1,8 @@
 export type IconType = "code" | "ai" | "bolt" | "brain" | "rocket" | "heart";
 
+// Older generated sites use "Strong Match" / "Exceptional Match"; newer ones use MatchLevel.
+export type MatchLevel = "Strong" | "Partial" | "Gap";
+
 export interface SiteConfig {
   slug: string;
   generatedAt: string;
@@ -21,9 +24,10 @@ export interface SiteConfig {
   review: {
     items: {
       requirement: string;
-      match: string;
+      match: MatchLevel | string;
       score: number;
       evidence: string;
+      evidenceIds?: string[];
     }[];
   };
 

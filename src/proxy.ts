@@ -14,7 +14,11 @@ export function proxy(request: NextRequest) {
       return NextResponse.redirect(LINKEDIN_URL, { status: 308 })
     }
 
-    if (pathname.startsWith('/dashboard')) {
+    if (
+      pathname.startsWith('/dashboard') ||
+      pathname.startsWith('/preview') ||
+      pathname.startsWith('/api/agent')
+    ) {
       return new Response('Not Found', { status: 404 })
     }
   }
