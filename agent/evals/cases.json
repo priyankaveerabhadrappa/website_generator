@@ -1,0 +1,62 @@
+[
+  {
+    "id": "opsfleet",
+    "company_url": "https://www.opsfleet.com",
+    "expected_gaps": ["LangGraph", "Bedrock", "AgentCore"],
+    "expected_strong": []
+  },
+  {
+    "id": "java-backend",
+    "company_url": null,
+    "expected_gaps": ["Java", "Spring", "Kafka"],
+    "expected_strong": []
+  },
+  {
+    "id": "ios-developer",
+    "company_url": null,
+    "expected_gaps": ["Swift", "iOS"],
+    "expected_strong": []
+  },
+  {
+    "id": "data-engineer",
+    "company_url": null,
+    "expected_gaps": ["Spark", "Airflow", "dbt"],
+    "expected_strong": []
+  },
+  {
+    "id": "mlops-platform",
+    "company_url": null,
+    "expected_gaps": ["Kubernetes", "Terraform", "SageMaker"],
+    "expected_strong": []
+  },
+  {
+    "id": "azure-rag",
+    "company_url": null,
+    "expected_gaps": ["Azure"],
+    "expected_strong": ["RAG"]
+  },
+  {
+    "id": "cv-agritech",
+    "company_url": null,
+    "expected_gaps": ["PyTorch"],
+    "expected_strong": ["image classification"]
+  },
+  {
+    "id": "llm-evaluation-research",
+    "company_url": null,
+    "expected_gaps": [],
+    "expected_strong": ["evaluation"]
+  },
+  {
+    "id": "werkstudent-llm",
+    "company_url": null,
+    "expected_gaps": [],
+    "expected_strong": ["RAG", "Python"]
+  },
+  {
+    "id": "react-frontend",
+    "company_url": null,
+    "expected_gaps": ["Storybook"],
+    "expected_strong": ["React"]
+  }
+]
