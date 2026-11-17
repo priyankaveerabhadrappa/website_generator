@@ -26,7 +26,11 @@ export default function SiteRenderer({ config }: SiteRendererProps) {
       <SkillsSection skills={config.skills} company={candidate.company} />
       <WhyCompanySection whyCompany={config.whyCompany} company={candidate.company} />
       <EducationSection education={config.education} />
-      <ContactSection contact={config.contact} company={candidate.company} />
+      <ContactSection
+        contact={config.contact}
+        company={candidate.company}
+        name={`${candidate.firstName} ${candidate.lastName}`}
+      />
     </main>
   );
 }

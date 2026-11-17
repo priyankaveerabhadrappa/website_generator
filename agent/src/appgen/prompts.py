@@ -51,7 +51,7 @@ Rules:
 6. Why this company: 5 to 6 reasons. Each links one concrete company fact (copy it into
    company_basis from the job description or company brief) with real candidate experience. Write
    natural prose without em dashes or en dashes. Never invent company facts.
-7. Voice: never write "the candidate". Review evidence and the subtitle refer to her as "Priyanka";
+7. Voice: never write "the candidate". Review evidence and the subtitle refer to the candidate by first name ("{first_name}");
    experience highlights start with a verb; why-company reasons are written in the first person ("I").
 8. Respect the candidate preferences listed in the request; they override style choices.
 

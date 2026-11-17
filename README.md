@@ -16,7 +16,7 @@ does not support before you see it.
 4. Review the draft: requirement-by-requirement match levels, any statements the fact-checker
    could not verify, and a full preview
 5. **Approve**, **request changes** with feedback, or **reject**
-6. Approved sites are written to `data/sites/<slug>.json`; commit and push to publish
+6. Approved sites are written to `data/sites/<slug>.json` and served at `/<slug>`
 
 Each generated site includes:
 
@@ -45,7 +45,7 @@ flowchart TB
             R --> W[write]
             E --> W
             W --> F[fact_check]
-            F -->|"issues, max 2 revisions"| W
+            F -->|"issues, max 3 revisions"| W
             F --> AS[assemble]
             AS --> H{{"human_review<br/>(interrupt)"}}
             H -->|approve| PUB[publish]
@@ -70,7 +70,7 @@ flowchart TB
 | `analyze_job` | Turns the job description into 5-8 single-capability requirements (must / nice) |
 | `research_company` | Tool-using agent that reads the company's own website (max 3 fetches, one domain, follows real links) and returns facts with source URLs; facts citing pages it never fetched are dropped |
 | `gather_evidence` | Tool-using agent that cannot see the CV directly; it searches it through the MCP server and labels each requirement Strong / Partial / Gap |
-| `write` | Writes all site content; every statement must cite CV claim IDs (e.g. `nordfeld-logistics-3`). The CV sits behind a Bedrock prompt-cache point, so revisions are cheap |
+| `write` | Writes all site content; every statement must cite CV claim IDs (e.g. `nordfeld-logistics-2`). The CV sits behind a Bedrock prompt-cache point, so revisions are cheap |
 | `fact_check` | Rule checks (cited IDs exist, every role present, no invented years of experience, no must-have requirement skipped) plus an LLM judge that compares each statement with only the claims it cites. Statements that already passed are not re-judged |
 | `human_review` | Pauses the graph with `interrupt()`; the run survives a service restart because state is checkpointed in SQLite |
 | `publish` | Validates the final JSON against the `SiteConfig` schema and writes it |
@@ -79,7 +79,7 @@ flowchart TB
 
 - **Schema validation with retry:** every LLM step returns Pydantic-validated structured output via tool use; validation errors are fed back to the model, at most 2 retries
 - **Grounding:** claim-level citations, checked twice (rules and judge); fixed facts are injected from `data/profile.json` and the CV, never generated
-- **Bounded loops:** max 2 fact-check revisions, max 3 human revision rounds, per-agent tool budgets, a duplicate-tool-call breaker, LangGraph `recursion_limit`, and a per-run token budget. When a breaker trips, the run goes to human review with the open issues instead of looping
+- **Bounded loops:** max 3 fact-check revisions, max 3 human revision rounds, per-agent tool budgets, a duplicate-tool-call breaker, LangGraph `recursion_limit`, and a per-run token budget. When a breaker trips, the run goes to human review with the open issues instead of looping
 - **Tool safety:** the web tool only fetches the company's own domain (redirects included); MCP tool errors are returned to the model rather than crashing the run
 - **Human in the loop:** nothing is published without approval
 
@@ -99,7 +99,7 @@ scores them with the same independent audit:
 
 ```bash
 cd agent
-uv run appgen-eval                                     # all cases, ~$1 per case
+uv run appgen-eval                                     # all cases, ~$0.60 per case (pipeline + baseline)
 uv run appgen-eval --cases opsfleet java-backend       # a subset
 ```
 
@@ -109,14 +109,14 @@ mismatch, an LLM-evaluation research role):
 | Metric | Multi-agent pipeline | Original single call |
 |---|---|---|
 | Unsupported-claim rate (independent audit) | 1.8% | 9.3% |
-| Expected gaps labelled honestly | 6/6 | 0/3 |
+| Expected gaps labelled honestly (of those reviewed) | 6/6 | 0/3 |
 | Expected strengths recognised | 1/1 | 1/1 |
 | Schema-valid output | 3/3 | 3/3 |
 | Tool success rate / duplicate calls / off-domain fetches | 100% / 0 / 0 | n/a |
 | Mean latency / cost per site | 153 s / $0.50 | 54 s / $0.11 |
 
-The single call labelled Java, Kafka and JUnit "Strong Match" for a candidate with no Java, and
-inflated "87,939 judgments" to "90k+". The pipeline's in-loop fact-checker is deliberately stricter
+The single call labelled Java, Kafka and JUnit "Strong Match" for a candidate with no Java, rounded
+numbers from the CV upwards, and skipped half of the gap requirements entirely. The pipeline's in-loop fact-checker is deliberately stricter
 than the audit, so most runs still reach human review with 1-3 flagged statements.
 
 **Stack:** Next.js 16, TypeScript, React 19, Tailwind CSS 4, Framer Motion · Python 3.12, LangGraph, LangChain AWS (Bedrock Converse), MCP (FastMCP + langchain-mcp-adapters), FastAPI, Pydantic, SQLite
@@ -148,9 +148,10 @@ src/
   components/site/            # Application site components (props-driven)
   components/dashboard/       # Dashboard components
 data/
-  candidate_cv.md             # Your full CV (the only source of truth about you)
-  profile.json                # Education, contact, languages: inserted verbatim
-  sites/                      # Published configs -- commit these to publish
+  sample/                     # Fictional sample CV and profile, used when yours are absent
+  candidate_cv.md             # Your CV (gitignored; the only source of truth about you)
+  profile.json                # Education, contact, languages: inserted verbatim (gitignored)
+  sites/                      # Generated site configs (gitignored)
 ```
 
 ## Setup
@@ -190,23 +191,21 @@ The MCP server also runs standalone (`uv run appgen-mcp`), so any MCP client can
 | `BEDROCK_MODEL_ID` / `BEDROCK_JUDGE_MODEL_ID` | No | Writer and judge models (default Claude Sonnet 4.6) |
 | `TOKEN_BUDGET` | No | Per-run token circuit breaker (default 400k) |
 | `AGENT_SERVICE_URL` | No | Where Next.js finds the agent service (default `http://127.0.0.1:8000`) |
+| `ROOT_REDIRECT_URL` | No | Production only: where the bare domain redirects (e.g. your LinkedIn) |
 
-### Publishing a Generated Site
+### Deploying Generated Sites
 
-```bash
-git add data/sites/<slug>.json
-git commit -m "Add <company> application"
-git push                          # host rebuilds and prerenders the new page
-```
+Generated sites are gitignored so personal data stays out of the repo. To deploy them, remove the
+`/data/sites/*.json` line from `.gitignore`, commit the sites you want public and push; the host
+prerenders one page per site. The deployed app only serves those static pages; the dashboard,
+preview and agent API are local only. Set `ROOT_REDIRECT_URL` to redirect the bare domain (for
+example to your LinkedIn profile).
 
-The deployed app only serves the static sites; the dashboard, preview and agent API are local only.
+## Using Your Own CV
 
-## Customizing for Your Own CV
+The repo ships with a fictional candidate in `data/sample/`, so it runs out of the box. To use your own:
 
-1. Edit `data/candidate_cv.md` (keep the `### Title | Company | Location | Period` headings and `- ` bullets; each bullet becomes a citable claim)
-2. Edit `data/profile.json` with your education and contact details
+1. Copy `data/sample/candidate_cv.md` to `data/candidate_cv.md` and replace the content (keep the `### Title | Company | Location | Period` headings and `- ` bullets; each bullet becomes a citable claim)
+2. Copy `data/sample/profile.json` to `data/profile.json` and fill in your education and contact details.
+   Both files are gitignored and take precedence over the samples
 3. Optionally add writer preferences in the dashboard (e.g. "Never claim production LangGraph experience")
-
-## Built With
-
-Built with [Claude Code](https://claude.ai/claude-code) and [Cursor](https://cursor.com) as AI pair programmers.

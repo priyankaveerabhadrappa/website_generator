@@ -7,8 +7,17 @@ AGENT_DIR = Path(__file__).resolve().parents[2]
 REPO_ROOT = AGENT_DIR.parent
 DATA_DIR = REPO_ROOT / "data"
 SITES_DIR = DATA_DIR / "sites"
-CV_PATH = DATA_DIR / "candidate_cv.md"
-PROFILE_PATH = DATA_DIR / "profile.json"
+SAMPLE_DIR = DATA_DIR / "sample"
+
+
+def _data_file(name: str) -> Path:
+    """Your own data/<name> if present (gitignored), otherwise the committed sample in data/sample/."""
+    own = DATA_DIR / name
+    return own if own.exists() else SAMPLE_DIR / name
+
+
+CV_PATH = _data_file("candidate_cv.md")
+PROFILE_PATH = _data_file("profile.json")
 STATE_DIR = AGENT_DIR / ".state"
 
 # The Next.js app keeps AWS credentials in .env.local; reuse them so both halves share one setup.

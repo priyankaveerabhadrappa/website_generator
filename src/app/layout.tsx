@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Application Generator | Priyanka Veerabhadrappa",
+  title: "Application Generator",
   description:
     "Generate personalized job application websites from any job description. Built with Next.js, TypeScript, and Claude Code.",
 };

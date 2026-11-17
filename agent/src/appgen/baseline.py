@@ -11,6 +11,7 @@ import time
 from langchain_core.messages import HumanMessage
 
 from .config import AGENT_DIR, CV_PATH
+from .cv import load_profile
 from .llm import make_model, usage_of
 
 PROMPT_FILE = AGENT_DIR / "evals" / "baseline_prompt.ts"
@@ -27,8 +28,13 @@ def _extract_json(text: str) -> str:
 
 
 async def run_baseline(job_description: str) -> dict:
+    profile = load_profile()
     prompt = (
         _template()
+        .replace("${firstName}", profile["candidate"]["firstName"])
+        .replace("${lastName}", profile["candidate"]["lastName"])
+        .replace("${education}", json.dumps(profile["education"], ensure_ascii=False, indent=2))
+        .replace("${contact}", json.dumps(profile["contact"], ensure_ascii=False, indent=2))
         .replace("${jobDescription}", job_description)
         .replace("${candidateCV}", CV_PATH.read_text(encoding="utf-8"))
     )

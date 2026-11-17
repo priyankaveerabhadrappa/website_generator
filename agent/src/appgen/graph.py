@@ -196,7 +196,9 @@ async def write(state: State) -> dict:
     past = [f"{a['company']} ({a['position']})" for a in memory.list_applications(limit=5)]
 
     messages = [
-        cached_system(prompts.WRITER_RULES + cv.annotated()),
+        cached_system(
+            prompts.WRITER_RULES.replace("{first_name}", load_profile()["candidate"]["firstName"]) + cv.annotated()
+        ),
         HumanMessage(
             prompts.WRITER_REQUEST.format(
                 position=analysis.position,

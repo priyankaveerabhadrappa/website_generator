@@ -88,7 +88,7 @@ export default function RunPanel({ run, onDecision, onDismiss }: RunPanelProps) 
             rel="noopener noreferrer"
             className="text-accent-light hover:underline font-mono text-sm"
           >
-            {`https://priyanka-veerabhadra.com/${run.slug}`}
+            {`/${run.slug}`}
           </a>
           <p className="text-muted text-xs mt-2">
             Commit <code className="font-mono">data/sites/{run.slug}.json</code> and push to publish it.

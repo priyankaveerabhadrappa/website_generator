@@ -7,9 +7,10 @@ import { SiteConfig } from "@/lib/types";
 interface ContactSectionProps {
   contact: SiteConfig["contact"];
   company: string;
+  name: string;
 }
 
-export default function ContactSection({ contact, company }: ContactSectionProps) {
+export default function ContactSection({ contact, company, name }: ContactSectionProps) {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true });
 
@@ -71,7 +72,7 @@ export default function ContactSection({ contact, company }: ContactSectionProps
           transition={{ delay: 0.5 }}
           className="mt-20 pt-8 border-t border-border"
         >
-          <p className="text-xs text-muted font-mono">© Priyanka Veerabhadrappa</p>
+          <p className="text-xs text-muted font-mono">© {name}</p>
         </motion.div>
       </div>
     </section>

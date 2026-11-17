@@ -24,8 +24,13 @@
 .DS_Store
 *.pem
 
-# generated site configs are committed on purpose -- they are the source for
-# the prerendered application pages
+# personal data: your own CV, profile and generated sites stay local.
+# Without data/candidate_cv.md and data/profile.json the agent uses data/sample/.
+/data/candidate_cv.md
+/data/profile.json
+/data/sites/*.json
+# raw eval output quotes the CV; the .md summaries are committed
+/agent/evals/results/*.json
 
 # agent service: virtualenv and local run state (checkpoints, memory)
 /agent/.venv/

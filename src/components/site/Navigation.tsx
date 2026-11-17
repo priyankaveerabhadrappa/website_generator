@@ -26,7 +26,7 @@ export default function Navigation({ candidate }: NavigationProps) {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const logo = `priyanka.apply(${candidate.company.toLowerCase().replace(/\s+/g, "")})`;
+  const logo = `${candidate.firstName.toLowerCase()}.apply(${candidate.company.toLowerCase().replace(/\s+/g, "")})`;
 
   return (
     <>

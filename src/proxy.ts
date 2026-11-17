@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-const LINKEDIN_URL = 'https://www.linkedin.com/in/your-profile'
+// Optional: where the bare domain redirects in production (e.g. your LinkedIn profile).
+const ROOT_REDIRECT_URL = process.env.ROOT_REDIRECT_URL
 
 export function proxy(request: NextRequest) {
   const host = request.headers.get('host') ?? ''
@@ -10,8 +11,8 @@ export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   if (!isLocal) {
-    if (pathname === '/') {
-      return NextResponse.redirect(LINKEDIN_URL, { status: 308 })
+    if (pathname === '/' && ROOT_REDIRECT_URL) {
+      return NextResponse.redirect(ROOT_REDIRECT_URL, { status: 308 })
     }
 
     if (
