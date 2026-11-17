@@ -84,7 +84,7 @@ export interface SiteConfig {
     locationDetail: string;
     locationAvailability: string;
     linkedin: string;
-    phone: string;
+    phone?: string;
     languages: { language: string; level: string }[];
     footerText: string;
   };

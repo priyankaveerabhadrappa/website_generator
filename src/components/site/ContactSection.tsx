@@ -49,9 +49,11 @@ export default function ContactSection({ contact, company }: ContactSectionProps
             </a>
           </div>
 
-          <div className="mt-6 flex items-center justify-center gap-6 text-sm text-muted">
-            <span>{contact.phone}</span>
-          </div>
+          {contact.phone && (
+            <div className="mt-6 flex items-center justify-center gap-6 text-sm text-muted">
+              <span>{contact.phone}</span>
+            </div>
+          )}
 
           <div className="mt-10 flex items-center justify-center gap-4">
             {contact.languages.map((lang) => (
